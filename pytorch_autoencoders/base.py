@@ -1,28 +1,20 @@
 from abc import ABC, abstractmethod
 import torch
-from torch import nn, Size, Tensor
+from torch import nn, Tensor
 from torchvision.transforms import ToTensor
-from typing import Callable
+from typing import Any, Callable
 
 
 class AutoEncoderBase(ABC, nn.Module):
     @abstractmethod
-    def input_dim(self) -> Size:
-        pass
-
-    @abstractmethod
-    def encoded_dim(self) -> Size:
-        pass
-
-    @abstractmethod
-    def encode(self, x: Tensor) -> Tensor:
+    def encode(self, x: Tensor) -> Any:
         pass
 
     @abstractmethod
     def decode(self, z: Tensor) -> Tensor:
         pass
 
-    def to_image(self, x: Tensor) -> Tensor:
+    def to_image(self, x: Any) -> Tensor:
         return x
 
     def transformer() -> Callable:

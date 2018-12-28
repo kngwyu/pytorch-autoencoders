@@ -9,6 +9,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
     optimizer = config.optim(ae.parameters())
     loss_list = []
     for epoch in range(config.num_epochs):
+        epoch_loss = 0.0
         for data in data_loader:
             img, _ = data
             img = img.to(config.device)
@@ -17,5 +18,8 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            loss_list.append(float(loss.item()))
+            epoch_loss += float(loss.item())
+        loss = epoch_loss / float(config.batch_size)
+        loss_list.append(loss)
+        print('epoch {} completed loss: {}'.format(epoch, loss))
     return loss_list

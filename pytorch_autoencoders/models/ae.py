@@ -1,5 +1,5 @@
-from .base import AutoEncoderBase
-from .config import Config
+from ..base import AutoEncoderBase
+from ..config import Config
 from itertools import chain
 import torch
 from torch import nn, Size, Tensor
@@ -28,16 +28,9 @@ class AutoEncoder(AutoEncoderBase):
             nn.Linear(hidden[0], input_dim_flat),
             nn.Tanh(),
         )
-        self._input_dim = input_dim
         self.input_dim_flat = input_dim_flat
         self._encoded_dim = hidden.pop()
         self.to(config.device)
-
-    def input_dim(self) -> Size:
-        return self._input_dim
-
-    def encoded_dim(self) -> Size:
-        return Size((self._encoded_dim,))
 
     def encode(self, x: Tensor) -> Tensor:
         shape = x.shape

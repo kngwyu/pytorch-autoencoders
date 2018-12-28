@@ -32,8 +32,8 @@ def show_decoded_images(
     data_loader = DataLoader(data, batch_size=batch_size, shuffle=False)
     images, _ = iter(data_loader).next()
     with torch.no_grad():
-        z = ae(images.to(config.device)).squeeze()
-    img = ae.to_image(z).cpu().numpy()
+        z = ae(images.to(config.device))
+    img = ae.to_image(z).squeeze().cpu().numpy()
     for i in range(batch_size):
         plt.imshow(img[i].squeeze())
         plt.show()
