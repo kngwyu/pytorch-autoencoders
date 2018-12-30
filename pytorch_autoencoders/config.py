@@ -9,5 +9,3 @@ class Config:
         self.optim = torch.optim.Adam
         self.num_epochs = 100
         self.batch_size = 128
-        # for beta VAE
-        self.beta = 1.0
