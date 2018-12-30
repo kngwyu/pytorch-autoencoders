@@ -20,7 +20,6 @@ class ConvVae(VariationalAutoEncoder):
             config: Config,
             hidden_channels: List[int] = [32, 64, 128, 256],
             z_dim: int = 32,
-            decoder_head: nn.Module = nn.Sigmoid(),
             encoder_ks: List[tuple] = [(4, 2), (4, 2), (4, 2), (4, 2)],
             decoder_ks: List[tuple] = [(5, 2), (5, 2), (6, 2), (6, 2)]
     ) -> None:
@@ -37,11 +36,12 @@ class ConvVae(VariationalAutoEncoder):
         self.fc1_2 = nn.Linear(h_dim, z_dim)
         self.fc2 = nn.Linear(z_dim, h_dim)
         channels = [h_dim, *reversed(hidden_channels[:-1]), in_channel]
-        self.decoder = nn.Sequential(*chain.from_iterable([
-            (nn.ConvTranspose2d(channels[i], channels[i + 1], *decoder_ks[i]), nn.ReLU(True))
-            for i in range(length)
-        ]))
-        self.decoder[-1] = decoder_head
+        deconv = [
+            nn.ConvTranspose2d(channels[i], channels[i + 1], *decoder_ks[i]) for i in range(length)
+        ]
+        self.decoder = nn.Sequential(
+            *chain.from_iterable([(de, nn.ReLU(True)) for de in deconv[:-1]]), deconv[-1]
+        )
         self.to(config.device)
 
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
