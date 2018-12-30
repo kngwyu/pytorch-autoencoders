@@ -22,9 +22,9 @@ def get_loss_function(
     if dist == DecoderDist.IDENTITY:
         recons_loss = lambda b, a: F.binary_cross_entropy(a, b, reduction='sum')
     elif dist == DecoderDist.BERNOULLI:
-        recons_loss = lambda b, a: F.binary_cross_entropy_with_logits(a, b, size_average=False)
+        recons_loss = lambda b, a: F.binary_cross_entropy_with_logits(a, b, reduction='sum')
     elif dist == DecoderDist.GAUSSIAN:
-        recons_loss = lambda b, a: F.mse_loss(torch.sigmoid(a), b, size_average=False)
+        recons_loss = lambda b, a: F.mse_loss(torch.sigmoid(a), b, reduction='sum')
     else:
         raise ValueError('dist have to be chosen from DecoderDist')
 
