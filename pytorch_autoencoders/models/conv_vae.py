@@ -57,10 +57,10 @@ class ConvVae(VariationalAutoEncoder):
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         h1 = self.encoder_conv(x)
         h1 = h1.view(h1.size(0), -1)
-        h2 = self.encoder_fc(h1)
-        return h2[:, :self.z_dim], h2[:, self.z_dim:]
+        z = self.encoder_fc(h1)
+        return z[:, :self.z_dim], z[:, self.z_dim:]
 
     def decode(self, z: Tensor, old_shape: Size = None) -> Tensor:
-        h3 = self.decoder_fc(z)
-        h3 = h3.view(*h3.shape, 1, 1)
-        return self.decoder_deconv(h3)
+        h2 = self.decoder_fc(z)
+        h2 = h2.view(*h2.shape, 1, 1)
+        return self.decoder_deconv(h2)

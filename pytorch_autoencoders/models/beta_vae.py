@@ -4,18 +4,27 @@ Other than its loss fuction, it's same as VAE.
 import torch
 from torch.nn import functional as F
 from torch import Tensor
-from typing import Callable
+from typing import Callable, Optional, Tuple
 from .vae import VaeOutPut
+
+
+def bernoulli_recons(a: Tensor, b: Tensor) -> Tensor:
+    return F.binary_cross_entropy_with_logits(a, b, reduction='sum')
+
+
+def gaussian_recons(a: Tensor, b: Tensor) -> Tensor:
+    return F.mse_loss(torch.sigmoid(a), b, reduction='sum')
 
 
 def get_loss_function(
         beta: float = 1.0,
         decoder_type: str = 'bernoulli',
+        capacity_param: Optional[float] = None
 ) -> Callable[[VaeOutPut, Tensor], Tensor]:
     if decoder_type == 'bernoulli':
-        recons_loss = lambda a, b: F.binary_cross_entropy_with_logits(a, b, reduction='sum')
+        recons_loss = bernoulli_recons
     elif decoder_type == 'gaussian':
-        recons_loss = lambda a, b: F.mse_loss(torch.sigmoid(a), b, reduction='sum')
+        recons_loss = gaussian_recons
     else:
         raise ValueError('Currently only bernoulli and gaussian are supported as decoder head')
 
