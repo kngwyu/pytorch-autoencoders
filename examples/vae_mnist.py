@@ -11,7 +11,7 @@ from torchvision.datasets import MNIST
 def train() -> None:
     config = Config()
     config.optim = partial(Adam, lr=0.001, weight_decay=1e-5)
-    config.criterion = vae.loss_function
+    config.criterion = vae.bernoulli_loss
     ae = vae.VariationalAutoEncoder(torch.Size((28, 28)), config)
     data = MNIST('/tmp/mnist/train', download=True, transform=ToTensor())
     train_helper.train(ae, config, data)

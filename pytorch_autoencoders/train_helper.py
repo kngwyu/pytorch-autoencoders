@@ -22,7 +22,6 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             loss.backward()
             optimizer.step()
             epoch_loss += float(loss.item())
-            print('epoch_loss: ', epoch_loss)
             cnt += 1
         loss = epoch_loss / float(cnt)
         print('epoch: {} loss: {}'.format(epoch, loss))

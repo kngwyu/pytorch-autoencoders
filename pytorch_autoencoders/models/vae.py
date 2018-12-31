@@ -39,8 +39,7 @@ class VariationalAutoEncoder(AutoEncoderBase):
         return self.fc2_1(h1), self.fc2_2(h1)
 
     def decode(self, z: Tensor, old_shape: Size = None) -> Tensor:
-        h3 = F.relu(self.fc3(z))
-        x = torch.sigmoid(self.fc4(h3))
+        x = F.relu(self.fc3(z))
         if old_shape is None:
             return x
         else:
@@ -60,7 +59,13 @@ class VariationalAutoEncoder(AutoEncoderBase):
         return VaeOutPut(self.decode(z, old_shape=x.shape), mu, logvar)
 
 
-def loss_function(res: VaeOutPut, img: Tensor) -> Tensor:
-    bce = F.binary_cross_entropy(res.x, img, reduction='sum')
+def bernoulli_loss(res: VaeOutPut, img: Tensor) -> Tensor:
+    bce = F.binary_cross_entropy_with_logits(res.x, img, reduction='sum')
+    kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
+    return bce + kld
+
+
+def gaussian_loss(res: VaeOutPut, img: Tensor) -> Tensor:
+    bce = F.mse_loss(torch.sigmoid(res.x), img, reduction='sum')
     kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
     return bce + kld
