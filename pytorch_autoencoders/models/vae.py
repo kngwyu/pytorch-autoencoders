@@ -30,16 +30,15 @@ class VariationalAutoEncoder(AutoEncoderBase):
         self.fc2_2 = nn.Linear(hidden[0], hidden[1])
         self.fc3 = nn.Linear(hidden[1], hidden[0])
         self.fc4 = nn.Linear(hidden[0], input_dim_flat)
-        self.input_dim_flat = input_dim_flat
         self.to(config.device)
 
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
-        shape = x.shape
-        h1 = F.relu(self.fc1(x.view(*shape[:-2], self.input_dim_flat)))
+        h1 = F.relu(self.fc1(x.view(*x.shape[:-2], -1)))
         return self.fc2_1(h1), self.fc2_2(h1)
 
     def decode(self, z: Tensor, old_shape: Size = None) -> Tensor:
-        x = F.relu(self.fc3(z))
+        h3 = F.relu(self.fc3(z))
+        x = self.fc4(h3)
         if old_shape is None:
             return x
         else:
