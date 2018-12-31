@@ -11,3 +11,4 @@ class Config:
         self.num_epochs = 100
         self.batch_size = 128
         self.initializer = kaiming_normal()
+        self.grad_clip = 0.5

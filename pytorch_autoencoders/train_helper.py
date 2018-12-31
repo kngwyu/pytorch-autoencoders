@@ -21,6 +21,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             loss = config.criterion(res, img)
             optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(ae.parameters(), config.grad_clip)
             optimizer.step()
             epoch_loss += float(loss.item())
             cnt += 1
