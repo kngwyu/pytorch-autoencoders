@@ -31,6 +31,7 @@ class AutoEncoder(AutoEncoderBase):
         self.input_dim_flat = input_dim_flat
         self._encoded_dim = hidden.pop()
         self.to(config.device)
+        config.initializer(self)
 
     def encode(self, x: Tensor) -> Tensor:
         shape = x.shape

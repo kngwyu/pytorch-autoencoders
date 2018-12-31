@@ -52,6 +52,7 @@ class ConvVae(VariationalAutoEncoder):
         del self.decoder_deconv[-1]
         self.z_dim = z_dim
         self.to(config.device)
+        config.initializer(self)
 
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         h1 = self.encoder_conv(x)

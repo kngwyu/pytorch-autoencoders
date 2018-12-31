@@ -31,6 +31,7 @@ class VariationalAutoEncoder(AutoEncoderBase):
         self.fc3 = nn.Linear(hidden[1], hidden[0])
         self.fc4 = nn.Linear(hidden[0], input_dim_flat)
         self.to(config.device)
+        config.initializer(self)
 
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         h1 = F.relu(self.fc1(x.view(*x.shape[:-2], -1)))

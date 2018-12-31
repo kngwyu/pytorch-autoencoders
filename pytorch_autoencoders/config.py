@@ -1,4 +1,5 @@
 import torch
+from .init import kaiming_normal
 
 
 class Config:
@@ -9,3 +10,4 @@ class Config:
         self.optim = torch.optim.Adam
         self.num_epochs = 100
         self.batch_size = 128
+        self.initializer = kaiming_normal()
