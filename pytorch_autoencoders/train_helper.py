@@ -1,6 +1,7 @@
 from torch.utils.data import DataLoader, Dataset
 from .base import AutoEncoderBase
 from .config import Config
+import torch
 from tqdm import tqdm
 from typing import List
 
@@ -27,3 +28,20 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
         print('epoch: {} loss: {}'.format(epoch, loss))
         loss_list.append(loss)
     return loss_list
+
+
+def test_loss(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> float:
+    data_loader = DataLoader(data_set, batch_size=config.batch_size, shuffle=True)
+    cnt = 0
+    epoch_loss = 0.0
+    for data in data_loader:
+        img, _ = data
+        img = img.to(config.device)
+        with torch.no_grad():
+            res = ae(img)
+        loss = config.criterion(res, img)
+        epoch_loss += float(loss.item())
+        cnt += 1
+    loss = epoch_loss / float(cnt)
+    print('test_loss: {}'.format(loss))
+    return loss
