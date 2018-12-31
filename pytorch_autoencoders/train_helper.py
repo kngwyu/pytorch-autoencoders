@@ -39,7 +39,7 @@ def test_loss(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> float:
         img = img.to(config.device)
         with torch.no_grad():
             res = ae(img)
-        loss = config.criterion(res, img)
+        loss = config.criterion(ae.to_image(res), img)
         epoch_loss += float(loss.item())
         cnt += 1
     loss = epoch_loss / float(cnt)
