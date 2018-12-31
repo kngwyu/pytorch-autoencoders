@@ -24,7 +24,7 @@ def train() -> None:
     loss = train_helper.train(ae, config, data)
     ae.save('dsprites_beta_vae.pth')
     path = Path('loss.json')
-    path.write_str(json.dumps(loss))
+    path.write_text(json.dumps(loss))
     inference_helper.show_decoded_images(ae, config, data)
     inference_helper.show_feature_map(ae, config, data)
 
