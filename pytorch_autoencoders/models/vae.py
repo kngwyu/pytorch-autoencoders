@@ -44,7 +44,7 @@ class VariationalAutoEncoder(AutoEncoderBase):
         else:
             return x.view(old_shape)
 
-    def reparameterize(self, mu: Tensor, logvar: Tensor):
+    def reparameterize(self, mu: Tensor, logvar: Tensor) -> Tensor:
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return eps.mul(std).add_(mu)

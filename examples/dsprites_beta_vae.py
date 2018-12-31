@@ -12,14 +12,14 @@ from torch.optim import Adam
 
 def train() -> None:
     config = Config()
-    config.optim = partial(Adam, lr=0.001, weight_decay=1e-5)
+    config.optim = partial(Adam, lr=5e-4, weight_decay=1e-5)
     config.criterion = \
         beta_vae.get_loss_function(decoder_type='bernoulli', beta=4.0)
     config.num_epochs = 100
     ae = ConvVae(torch.Size((64, 64)), config)
 
     def to_tensor(x: ndarray) -> torch.Tensor:
-        return torch.tensor(x, dtype=torch.float32).view(1, *x.shape[-2:])
+        return torch.tensor(x / 255.0, dtype=torch.float32).view(1, *x.shape[-2:])
     data = Dsprites(transform=to_tensor)
     loss = train_helper.train(ae, config, data)
     ae.save('dsprites_beta_vae.pth')
