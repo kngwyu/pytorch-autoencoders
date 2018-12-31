@@ -13,8 +13,9 @@ from torch.optim import Adam
 def train() -> None:
     config = Config()
     config.optim = partial(Adam, lr=0.001, weight_decay=1e-5)
-    config.criterion = beta_vae.get_loss_function(beta=4.0)
-    config.num_epochs = 200
+    config.criterion = \
+        beta_vae.get_loss_function(beta=4.0, dist=beta_vae.DecoderDist.IDENTITY)
+    config.num_epochs = 100
     ae = ConvVae(torch.Size((64, 64)), config)
 
     def to_tensor(x: ndarray) -> torch.Tensor:
