@@ -18,7 +18,7 @@ def train() -> None:
     ae = conv_vae.betavae_chairs(torch.Size((64, 64)), config)
 
     def to_tensor(x: ndarray) -> torch.Tensor:
-        return torch.tensor(x / 255.0, dtype=torch.float32).view(1, *x.shape[-2:])
+        return torch.tensor(x, dtype=torch.float32).view(1, *x.shape[-2:])
     data = Dsprites(transform=to_tensor)
     loss = train_helper.train(ae, config, data)
     ae.save('dsprites_beta_vae.pth')
