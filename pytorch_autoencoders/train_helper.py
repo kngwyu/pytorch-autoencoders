@@ -1,3 +1,4 @@
+import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from .base import AutoEncoderBase
 from .config import Config
@@ -11,8 +12,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
     loss_list = []
     print('Started training...')
     for epoch in range(config.num_epochs):
-        epoch_loss = 0.0
-        cnt = 0
+        epoch_loss = []
         for data in data_loader:
             img, _ = data
             img = img.to(config.device)
@@ -22,10 +22,12 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             loss.backward()
             torch.nn.utils.clip_grad_norm_(ae.parameters(), config.grad_clip)
             optimizer.step()
-            epoch_loss += float(loss.item())
-            cnt += 1
-        loss = epoch_loss / float(cnt)
-        print('epoch: {} loss: {}'.format(epoch, loss))
+            epoch_loss.append(float(loss.item()))
+        el = np.array(epoch_loss)
+        print(
+            'epoch: {} loss_mean: {} loss_max: {} loss_min: {}'
+            .format(epoch, el.mean(), el.max(), el.min())
+        )
         loss_list.append(loss)
     return loss_list
 

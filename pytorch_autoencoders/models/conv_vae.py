@@ -1,4 +1,5 @@
 from itertools import chain
+import torch
 from torch import nn, Size, Tensor
 from typing import List, Tuple
 from ..config import Config
