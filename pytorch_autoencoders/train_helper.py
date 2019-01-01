@@ -2,7 +2,6 @@ from torch.utils.data import DataLoader, Dataset
 from .base import AutoEncoderBase
 from .config import Config
 import torch
-from tqdm import tqdm
 from typing import List
 
 
@@ -11,7 +10,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
     optimizer = config.optim(ae.parameters())
     loss_list = []
     print('Started training...')
-    for epoch in tqdm(range(config.num_epochs)):
+    for epoch in range(config.num_epochs):
         epoch_loss = 0.0
         cnt = 0
         for data in data_loader:
