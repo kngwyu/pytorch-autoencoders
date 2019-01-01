@@ -27,7 +27,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             'epoch: {} loss_mean: {} loss_max: {} loss_min: {}'
             .format(epoch, el.mean(), el.max(), el.min())
         )
-        loss_list.append(loss)
+        loss_list.append(float(el.mean()))
     return loss_list
 
 
