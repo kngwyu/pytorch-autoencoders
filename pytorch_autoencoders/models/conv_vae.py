@@ -14,7 +14,8 @@ def calc_hidden(params: List[Tuple[int, int]], width: int, height: int) -> int:
 
 
 class ConvVae(VariationalAutoEncoder):
-    """Model used in https://arxiv.org/abs/1804.03599
+    """VAE with CNN.
+       Default network parameters are cited from https://arxiv.org/abs/1804.03599.
     """
     def __init__(
             self,
@@ -64,3 +65,17 @@ class ConvVae(VariationalAutoEncoder):
         h2 = self.decoder_fc(z)
         h2 = h2.view(*h2.shape, 1, 1)
         return self.decoder_deconv(h2)
+
+
+def betavae_chairs(input_dim: Size, config: Config) -> ConvVae:
+    """Same architecture used for chairs in https://openreview.net/forum?id=Sy2fzU9gl
+    """
+    return ConvVae(
+        input_dim,
+        config,
+        conv_channels=[32, 32, 64, 64],
+        encoder_ks=[(4, 2), (4, 2), (4, 2), (4, 2)],
+        decoder_ks=[(5, 2), (5, 2), (6, 2), (6, 2)],
+        fc_units=[256],
+        z_dim=20,
+    )
