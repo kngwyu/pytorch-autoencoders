@@ -26,28 +26,29 @@ class ConvVae(VariationalAutoEncoder):
             decoder_ks: List[tuple] = [(5, 2), (5, 2), (6, 2), (6, 2)],
             fc_units: List[int] = [256, 256],
             z_dim: int = 20,
+            activator: nn.Module = nn.ReLU(True)
     ) -> None:
         super(VariationalAutoEncoder, self).__init__()
         in_channel = input_dim[0] if len(input_dim) == 3 else 1
         channels = [in_channel] + conv_channels
         self.encoder_conv = nn.Sequential(*chain.from_iterable([
-            (nn.Conv2d(channels[i], channels[i + 1], *encoder_ks[i]), nn.ReLU(True))
+            (nn.Conv2d(channels[i], channels[i + 1], *encoder_ks[i]), activator)
             for i in range(len(channels) - 1)
         ]))
         units = [calc_hidden(encoder_ks, *input_dim[-2:]) * channels[-1]] + fc_units + [z_dim * 2]
         self.encoder_fc = nn.Sequential(*chain.from_iterable([
-            (nn.Linear(units[i], units[i + 1]), nn.ReLU(True))
+            (nn.Linear(units[i], units[i + 1]), activator)
             for i in range(len(units) - 1)
         ]))
         del self.encoder_fc[-1]
         units = [z_dim] + list(reversed(units[:-1]))
         self.decoder_fc = nn.Sequential(*chain.from_iterable([
-            (nn.Linear(units[i], units[i + 1]), nn.ReLU(True))
+            (nn.Linear(units[i], units[i + 1]), activator)
             for i in range(len(units) - 1)
         ]))
         channels = [units[-1]] + list(reversed(channels[:-1]))
         self.decoder_deconv = nn.Sequential(*chain.from_iterable([
-            (nn.ConvTranspose2d(channels[i], channels[i + 1], *decoder_ks[i]), nn.ReLU(True))
+            (nn.ConvTranspose2d(channels[i], channels[i + 1], *decoder_ks[i]), activator)
             for i in range(len(channels) - 1)
         ]))
         del self.decoder_deconv[-1]
