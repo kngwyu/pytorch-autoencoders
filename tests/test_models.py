@@ -21,4 +21,5 @@ def test_model_dim(aegen: AutoEncoderBase, size: tuple) -> None:
         res = ae(batch.to(config.device))
     if isinstance(res, VaeOutPut):
         res = res.x
+    print(ae)
     assert res.shape == torch.Size((BATCH_SIZE, 1, *input_dim))

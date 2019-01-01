@@ -1,12 +1,11 @@
 from itertools import chain
-import torch
 from torch import nn, Size, Tensor
 from typing import List, Tuple
 from ..config import Config
 from .vae import VariationalAutoEncoder
 
 
-def calc_hidden(params: List[Tuple[int, int]], width: int, height: int) -> int:
+def cnn_hidden(params: List[tuple], width: int, height: int) -> int:
     for kernel, stride in params:
         width = (width - kernel) // stride + 1
         height = (height - kernel) // stride + 1
@@ -23,8 +22,8 @@ class ConvVae(VariationalAutoEncoder):
             input_dim: Size,
             config: Config,
             conv_channels: List[int] = [32, 32, 32, 32],
-            encoder_ks: List[tuple] = [(4, 2), (4, 2), (4, 2), (4, 2)],
-            decoder_ks: List[tuple] = [(5, 2), (5, 2), (6, 2), (6, 2)],
+            conv_args: List[tuple] = [(4, 2), (4, 2), (4, 2), (4, 2)],
+            deconv_args: List[tuple] = [(5, 2), (5, 2), (6, 2), (6, 2)],
             fc_units: List[int] = [256, 256],
             z_dim: int = 20,
             activator: nn.Module = nn.ReLU(True)
@@ -33,23 +32,24 @@ class ConvVae(VariationalAutoEncoder):
         in_channel = input_dim[0] if len(input_dim) == 3 else 1
         channels = [in_channel] + conv_channels
         self.encoder_conv = nn.Sequential(*chain.from_iterable([
-            (nn.Conv2d(channels[i], channels[i + 1], *encoder_ks[i]), activator)
+            (nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]), activator)
             for i in range(len(channels) - 1)
         ]))
-        units = [calc_hidden(encoder_ks, *input_dim[-2:]) * channels[-1]] + fc_units + [z_dim * 2]
+        hidden = cnn_hidden(conv_args, *input_dim[-2:])
+        units = [hidden * channels[-1]] + fc_units + [z_dim * 2]
         self.encoder_fc = nn.Sequential(*chain.from_iterable([
             (nn.Linear(units[i], units[i + 1]), activator)
             for i in range(len(units) - 1)
         ]))
         del self.encoder_fc[-1]
-        units = [z_dim] + list(reversed(units[:-1]))
+        units = [z_dim] + list(reversed(fc_units))
         self.decoder_fc = nn.Sequential(*chain.from_iterable([
             (nn.Linear(units[i], units[i + 1]), activator)
             for i in range(len(units) - 1)
         ]))
         channels = [units[-1]] + list(reversed(channels[:-1]))
         self.decoder_deconv = nn.Sequential(*chain.from_iterable([
-            (nn.ConvTranspose2d(channels[i], channels[i + 1], *decoder_ks[i]), activator)
+            (nn.ConvTranspose2d(channels[i], channels[i + 1], *deconv_args[i]), activator)
             for i in range(len(channels) - 1)
         ]))
         del self.decoder_deconv[-1]
@@ -76,8 +76,8 @@ def betavae_chairs(input_dim: Size, config: Config) -> ConvVae:
         input_dim,
         config,
         conv_channels=[32, 32, 64, 64],
-        encoder_ks=[(4, 2), (4, 2), (4, 2), (4, 2)],
-        decoder_ks=[(5, 2), (5, 2), (6, 2), (6, 2)],
+        conv_args=[(4, 2), (4, 2), (4, 2), (4, 2)],
+        deconv_args=[(5, 2), (5, 2), (6, 2), (6, 2)],
         fc_units=[256],
-        z_dim=20,
+        z_dim=32,
     )
