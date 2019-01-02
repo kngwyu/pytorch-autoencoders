@@ -36,18 +36,19 @@ class ConvVae(VariationalAutoEncoder):
             for i in range(len(channels) - 1)
         ]))
         hidden = cnn_hidden(conv_args, *input_dim[-2:])
-        units = [hidden * channels[-1]] + fc_units + [z_dim * 2]
+        encoder_units = [hidden * channels[-1]] + fc_units
         self.encoder_fc = nn.Sequential(*chain.from_iterable([
-            (nn.Linear(units[i], units[i + 1]), activator)
-            for i in range(len(units) - 1)
+            (nn.Linear(encoder_units[i], encoder_units[i + 1]), activator)
+            for i in range(len(encoder_units) - 1)
         ]))
-        del self.encoder_fc[-1]
-        units = [z_dim] + list(reversed(fc_units))
+        self.mu_fc = nn.Linear(encoder_units[-1], z_dim)
+        self.logvar_fc = nn.Linear(encoder_units[-1], z_dim)
+        decoder_units = [z_dim] + list(reversed(fc_units))
         self.decoder_fc = nn.Sequential(*chain.from_iterable([
-            (nn.Linear(units[i], units[i + 1]), activator)
-            for i in range(len(units) - 1)
+            (nn.Linear(decoder_units[i], decoder_units[i + 1]), activator)
+            for i in range(len(decoder_units) - 1)
         ]))
-        channels = [units[-1]] + list(reversed(channels[:-1]))
+        channels = [decoder_units[-1]] + list(reversed(channels[:-1]))
         self.decoder_deconv = nn.Sequential(*chain.from_iterable([
             (nn.ConvTranspose2d(channels[i], channels[i + 1], *deconv_args[i]), activator)
             for i in range(len(channels) - 1)
@@ -60,13 +61,13 @@ class ConvVae(VariationalAutoEncoder):
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         h1 = self.encoder_conv(x)
         h1 = h1.view(h1.size(0), -1)
-        z = self.encoder_fc(h1)
-        return z[:, :self.z_dim], z[:, self.z_dim:]
+        h2 = self.encoder_fc(h1)
+        return self.mu_fc(h2), self.logvar_fc(h2)
 
     def decode(self, z: Tensor, old_shape: Size = None) -> Tensor:
-        h2 = self.decoder_fc(z)
-        h2 = h2.view(*h2.shape, 1, 1)
-        return self.decoder_deconv(h2)
+        h3 = self.decoder_fc(z)
+        h3 = h3.view(*h3.shape, 1, 1)
+        return self.decoder_deconv(h3)
 
 
 def betavae_chairs(input_dim: Size, config: Config) -> ConvVae:
