@@ -30,5 +30,7 @@ def get_loss_fn(
     def loss_function(res: VaeOutPut, img: Tensor) -> Tensor:
         recons = recons_loss(res.x, img) / float(img.size(0))
         kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
+        print('r: ', recons)
+        print('k: ', kld)
         return recons + beta * kld
     return loss_function
