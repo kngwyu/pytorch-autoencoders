@@ -9,6 +9,7 @@ from .vae import VaeOutPut
 
 
 def bernoulli_recons(a: Tensor, b: Tensor) -> Tensor:
+    a = torch.where(torch.isnan(a), torch.tensor([0.]), a)
     return F.binary_cross_entropy(a, b, reduction='sum')
 
 
