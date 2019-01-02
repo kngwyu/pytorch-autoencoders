@@ -60,7 +60,7 @@ class VariationalAutoEncoder(AutoEncoderBase):
 
 
 def bernoulli_loss(res: VaeOutPut, img: Tensor) -> Tensor:
-    bce = F.binary_cross_entropy_with_logits(res.x, img, reduction='sum')
+    bce = F.binary_cross_entropy(torch.sigmoid(res.x), img, reduction='sum')
     kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
     return bce + kld
 
