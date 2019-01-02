@@ -9,7 +9,7 @@ from .vae import VaeOutPut
 
 
 def bernoulli_recons(a: Tensor, b: Tensor) -> Tensor:
-    return F.binary_cross_entropy(torch.sigmoid(a), b, reduction='sum')
+    return F.binary_cross_entropy(a, b, reduction='sum')
 
 
 def gaussian_recons(a: Tensor, b: Tensor) -> Tensor:

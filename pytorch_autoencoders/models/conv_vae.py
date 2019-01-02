@@ -2,7 +2,7 @@ from itertools import chain
 from torch import nn, Size, Tensor
 from typing import List, Tuple
 from ..config import Config
-from .vae import VariationalAutoEncoder
+from .vae import VariationalAutoEncoder, VaeOutPut
 
 
 def cnn_hidden(params: List[tuple], width: int, height: int) -> int:
@@ -53,7 +53,7 @@ class ConvVae(VariationalAutoEncoder):
             (nn.ConvTranspose2d(channels[i], channels[i + 1], *deconv_args[i]), activator)
             for i in range(len(channels) - 1)
         ]))
-        del self.decoder_deconv[-1]
+        self.decoder_deconv[-1] = nn.Sigmoid()
         self.z_dim = z_dim
         self.to(config.device)
         config.initializer(self)
@@ -133,6 +133,7 @@ class VAE(nn.Module):
             nn.ConvTranspose2d(64, 32, kernel_size=6, stride=2),
             nn.ReLU(),
             nn.ConvTranspose2d(32, image_channels, kernel_size=6, stride=2),
+            nn.Sigmoid()
         )
         self.to(config.device)
         config.initializer(self)
@@ -140,7 +141,7 @@ class VAE(nn.Module):
     def reparameterize(self, mu, logvar):
         std = logvar.mul(0.5).exp_()
         # return torch.normal(mu, std)
-        esp = torch.randn(*mu.size())
+        esp = torch.randn(*mu.size()).cuda()
         z = mu + std * esp
         return z
     
@@ -156,4 +157,4 @@ class VAE(nn.Module):
         h = self.encoder(x)
         z, mu, logvar = self.bottleneck(h)
         z = self.fc3(z)
-        return self.decoder(z), mu, logvar
+        return VaeOutPut(self.decoder(z), mu, logvar)
