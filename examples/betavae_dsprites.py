@@ -15,7 +15,7 @@ def train() -> None:
     config.optim = partial(Adam, lr=5e-4, weight_decay=1e-5)
     config.criterion = beta_vae.get_loss_fn(beta=4.0, decoder_type='bernoulli')
     config.num_epochs = 1000
-    ae = conv_vae.betavae_chairs(torch.Size((64, 64)), config)
+    ae = conv_vae.VAE(torch.Size((64, 64)), config)
 
     def to_tensor(x: ndarray) -> torch.Tensor:
         return torch.tensor(x, dtype=torch.float32).view(1, *x.shape[-2:])
