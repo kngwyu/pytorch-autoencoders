@@ -9,12 +9,11 @@ from .vae import VaeOutPut
 
 
 def bernoulli_recons(a: Tensor, b: Tensor) -> Tensor:
-    a = torch.where(torch.isnan(a), torch.tensor([0.]), a)
-    return F.binary_cross_entropy(a, b, reduction='sum')
+    return F.binary_cross_entropy_with_logits(a, b, reduction='sum')
 
 
 def gaussian_recons(a: Tensor, b: Tensor) -> Tensor:
-    return F.mse_loss(a, b, reduction='sum')
+    return F.mse_loss(torch.sigmoid(a), b, reduction='sum')
 
 
 def get_loss_fn(

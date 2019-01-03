@@ -53,7 +53,7 @@ class ConvVae(VariationalAutoEncoder):
             (nn.ConvTranspose2d(channels[i], channels[i + 1], *deconv_args[i]), activator)
             for i in range(len(channels) - 1)
         ]))
-        self.decoder_deconv[-1] = nn.Sigmoid()
+        del self.decoder_deconv[-1]
         self.z_dim = z_dim
         self.to(config.device)
         config.initializer(self)
