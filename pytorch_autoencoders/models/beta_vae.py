@@ -28,7 +28,8 @@ def get_loss_fn(
         raise ValueError('Currently only bernoulli and gaussian are supported as decoder head')
 
     def loss_function(res: VaeOutPut, img: Tensor) -> Tensor:
-        recons = recons_loss(res.x, img) / float(img.size(0))
-        kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
+        batch_size = float(img.size(0))
+        recons = recons_loss(res.x, img).div_(batch_size)
+        kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp()).div_(batch_size)
         return recons + beta * kld
     return loss_function
