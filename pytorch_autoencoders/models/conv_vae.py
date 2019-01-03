@@ -30,10 +30,11 @@ class ConvVae(VariationalAutoEncoder):
         super(VariationalAutoEncoder, self).__init__()
         in_channel = input_dim[0] if len(input_dim) == 3 else 1
         channels = [in_channel] + conv_channels
-        self.encoder_conv = nn.Sequential(*chain.from_iterable([
-            (nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]), activator)
-            for i in range(len(channels) - 1)
-        ]))
+        self.encoder_conv = nn.Sequential(*chain.from_iterable([(
+            nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]),
+            nn.BatchNorm2d(channels[i + 1], affine=False),
+            activator
+        ) for i in range(len(channels) - 1)]))
         self.cnn_hidden = cnn_hidden(conv_args, *input_dim[-2:])
         hidden = self.cnn_hidden[0] * self.cnn_hidden[1] * channels[-1]
         encoder_units = [hidden] + fc_units
@@ -51,6 +52,7 @@ class ConvVae(VariationalAutoEncoder):
         channels = list(reversed(conv_channels))
         deconv = chain.from_iterable([(
             nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i]),
+            nn.BatchNorm2d(channels[i + 1], affine=False),
             activator
         ) for i in range(len(channels) - 1)])
         self.decoder_deconv = nn.Sequential(
