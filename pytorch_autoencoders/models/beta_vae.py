@@ -16,16 +16,21 @@ def gaussian_recons(a: Tensor, b: Tensor) -> Tensor:
     return F.mse_loss(torch.sigmoid(a), b, reduction='sum')
 
 
-def get_loss_fn(
-        beta: float = 1.0,
-        decoder_type: str = 'bernoulli',
-) -> Callable[[VaeOutPut, Tensor], Tensor]:
+def _recons_fn(decoder_type: str = 'bernoulli') -> Callable[[Tensor, Tensor], Tensor]:
     if decoder_type == 'bernoulli':
         recons_loss = bernoulli_recons
     elif decoder_type == 'gaussian':
         recons_loss = gaussian_recons
     else:
         raise ValueError('Currently only bernoulli and gaussian are supported as decoder head')
+    return recons_loss
+
+
+def get_loss_fn(
+        beta: float = 1.0,
+        decoder_type: str = 'bernoulli',
+) -> Callable[[VaeOutPut, Tensor], Tensor]:
+    recons_loss = _recons_fn(decoder_type)
 
     def loss_function(res: VaeOutPut, img: Tensor) -> Tensor:
         batch_size = float(img.size(0))
