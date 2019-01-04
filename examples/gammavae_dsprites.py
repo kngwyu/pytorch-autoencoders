@@ -22,7 +22,6 @@ def train() -> None:
         gamma=200.0,
         capacity_max=20.0,
         num_epochs=config.num_epochs,
-        batch_size=len(data),
     )
     ae = conv_vae.betavae_chairs(torch.Size((64, 64)), config)
     loss = train_helper.train(ae, config, data)

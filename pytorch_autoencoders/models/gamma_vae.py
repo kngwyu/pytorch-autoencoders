@@ -15,7 +15,6 @@ class LossFunction:
             gamma: float = 1000.0,
             capacity_max: float = 20.0,
             num_epochs: int = 10000,
-            batch_size: int = 100000,
             decoder_type: str = 'bernoulli',
     ) -> Callable[[VaeOutPut, Tensor], Tensor]:
         self.gamma = gamma
@@ -23,13 +22,10 @@ class LossFunction:
         self.capacity = 0.0
         self.delta = capacity_max / float(num_epochs)
         self.capacity_max = capacity_max
-        self.batch_size = batch_size
-        self.steps = 0
 
-    def __update(self) -> None:
-        self.steps += 1
-        if self.steps % self.batch_size == 0:
-            self.capacity = min(self.capacity_max, self.capacity + self.delta)
+    def update(self) -> None:
+        self.capacity = min(self.capacity_max, self.capacity + self.delta)
+        print('capacity: ', self.capacity)
 
     def __call__(self, res: VaeOutPut, img: Tensor) -> Tensor:
         batch_size = float(img.size(0))
@@ -37,5 +33,4 @@ class LossFunction:
         kld = -0.5 * \
             torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp()).div_(batch_size)
         latent = self.gamma * (kld - self.capacity).abs()
-        self.__update()
         return recons + latent

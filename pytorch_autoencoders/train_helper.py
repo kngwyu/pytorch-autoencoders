@@ -22,6 +22,8 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             loss.backward()
             optimizer.step()
             epoch_loss.append(float(loss.item()))
+            if hashattr(config.criterion, 'update'):
+                config.criterion.update()
         el = np.array(epoch_loss)
         print(
             'epoch: {} loss_mean: {} loss_max: {} loss_min: {}'
