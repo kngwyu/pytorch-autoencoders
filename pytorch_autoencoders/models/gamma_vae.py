@@ -23,6 +23,7 @@ class LossFunction:
         self.capacity = 0.0
         self.delta = capacity_max / float(num_epochs)
         self.capacity_max = capacity_max
+        self.batch_size = batch_size
         self.steps = 0
 
     def __update(self) -> None:

@@ -18,7 +18,7 @@ def train() -> None:
     config = Config()
     config.optim = partial(Adam, lr=5e-4, weight_decay=1e-5)
     config.num_epochs = 1000
-    config.criterion = gamma_vae.get_loss_fn(
+    config.criterion = gamma_vae.LossFunction(
         gamma=200.0,
         capacity_max=20.0,
         num_epochs=config.num_epochs,
