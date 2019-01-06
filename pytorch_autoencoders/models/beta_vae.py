@@ -26,16 +26,14 @@ def _recons_fn(decoder_type: str = 'bernoulli') -> Callable[[Tensor, Tensor], Te
     return recons_loss
 
 
-def get_loss_fn(
-        beta: float = 1.0,
-        decoder_type: str = 'bernoulli',
-) -> Callable[[VaeOutPut, Tensor], Tensor]:
-    recons_loss = _recons_fn(decoder_type)
+class LossFunction:
+    def __init__(self, beta: float = 4.0, decoder_type: str = 'bernoulli') -> None:
+        self.recons_loss = _recons_fn(decoder_type)
+        self.beta = beta
 
-    def loss_function(res: VaeOutPut, img: Tensor) -> Tensor:
+    def __call__(self, res: VaeOutPut, img: Tensor) -> Tensor:
         batch_size = float(img.size(0))
-        recons = recons_loss(res.x, img).div_(batch_size)
+        recons = self.recons_loss(res.x, img).div_(batch_size)
         kld = -0.5 * \
             torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp()).div_(batch_size)
-        return recons + beta * kld
-    return loss_function
+        return recons + self.beta * kld

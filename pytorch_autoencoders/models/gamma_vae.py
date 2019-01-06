@@ -16,7 +16,7 @@ class LossFunction:
             capacity_max: float = 20.0,
             num_epochs: int = 10000,
             decoder_type: str = 'bernoulli',
-    ) -> Callable[[VaeOutPut, Tensor], Tensor]:
+    ) -> None:
         self.gamma = gamma
         self.recons_loss = _recons_fn(decoder_type)
         self.capacity = 0.0
