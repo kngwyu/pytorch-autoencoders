@@ -13,7 +13,7 @@ from torch.optim import Adam
 def train() -> None:
     config = Config()
     config.optim = partial(Adam, lr=5e-4, weight_decay=1e-5)
-    config.criterion = beta_vae.get_loss_fn(beta=4.0, decoder_type='bernoulli')
+    config.criterion = beta_vae.LossFunction(beta=4.0, decoder_type='bernoulli')
     config.num_epochs = 200
     ae = conv_vae.betavae_chairs(torch.Size((64, 64)), config)
 
