@@ -4,7 +4,6 @@ But, to avoid confusion, I call it gamma-VAE here.
 """
 import torch
 from torch import Tensor
-from typing import Callable
 from .beta_vae import _recons_fn
 from .vae import VaeOutPut
 
