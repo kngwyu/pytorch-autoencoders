@@ -1,7 +1,7 @@
 # What's this
 Implementation of some autoencoder models in PyTorch.
 
-I wrote this packages just for personal usage(=RL research), 
+I wrote this packages just for personal usage(=RL research),
 but maybe it's reusable for other usages.
 
 # Models

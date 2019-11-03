@@ -25,11 +25,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
         if hasattr(config.criterion, "update"):
             config.criterion.update()
         el = np.array(epoch_loss)
-        print(
-            "epoch: {} loss_mean: {} loss_max: {} loss_min: {}".format(
-                epoch, el.mean(), el.max(), el.min()
-            )
-        )
+        print("epoch: {} loss_mean: {}".format(epoch, el.mean()))
         loss_list.append(float(el.mean()))
     return loss_list
 

@@ -8,11 +8,7 @@ if sys.version_info.major != 3:
     )
 
 requirements = [
-    "numpy>=1.15.0",
-    "matplotlib>=3.0",
-    "opencv-python>=3.4",
-    "torch>=1.0",
-    "torchvision>=0.2.1",
+
 ]
 test_requirements = ["pytest>=3.0"]
 
