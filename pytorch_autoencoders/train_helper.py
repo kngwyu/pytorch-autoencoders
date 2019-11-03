@@ -10,7 +10,7 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
     data_loader = DataLoader(data_set, batch_size=config.batch_size, shuffle=True)
     optimizer = config.optim(ae.parameters())
     loss_list = []
-    print('Started training...')
+    print("Started training...")
     for epoch in range(config.num_epochs):
         epoch_loss = []
         for data in data_loader:
@@ -22,12 +22,13 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             loss.backward()
             optimizer.step()
             epoch_loss.append(float(loss.item()))
-        if hasattr(config.criterion, 'update'):
+        if hasattr(config.criterion, "update"):
             config.criterion.update()
         el = np.array(epoch_loss)
         print(
-            'epoch: {} loss_mean: {} loss_max: {} loss_min: {}'
-            .format(epoch, el.mean(), el.max(), el.min())
+            "epoch: {} loss_mean: {} loss_max: {} loss_min: {}".format(
+                epoch, el.mean(), el.max(), el.min()
+            )
         )
         loss_list.append(float(el.mean()))
     return loss_list
@@ -46,5 +47,5 @@ def test_loss(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> float:
         epoch_loss += float(loss.item())
         cnt += 1
     loss = epoch_loss / float(cnt)
-    print('test_loss: {}'.format(loss))
+    print("test_loss: {}".format(loss))
     return loss

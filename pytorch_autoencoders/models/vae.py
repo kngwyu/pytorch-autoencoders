@@ -16,11 +16,9 @@ class VariationalAutoEncoder(AutoEncoderBase):
     """Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
     https://arxiv.org/abs/1312.6114
     """
+
     def __init__(
-            self,
-            input_dim: Size,
-            config: Config,
-            hidden: List[int] = [400, 20]
+        self, input_dim: Size, config: Config, hidden: List[int] = [400, 20]
     ) -> None:
         super().__init__()
         input_dim_flat = input_dim[-1] * input_dim[-2]
@@ -60,12 +58,12 @@ class VariationalAutoEncoder(AutoEncoderBase):
 
 
 def bernoulli_loss(res: VaeOutPut, img: Tensor) -> Tensor:
-    bce = F.binary_cross_entropy(torch.sigmoid(res.x), img, reduction='sum')
+    bce = F.binary_cross_entropy(torch.sigmoid(res.x), img, reduction="sum")
     kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
     return bce + kld
 
 
 def gaussian_loss(res: VaeOutPut, img: Tensor) -> Tensor:
-    bce = F.mse_loss(torch.sigmoid(res.x), img, reduction='sum')
+    bce = F.mse_loss(torch.sigmoid(res.x), img, reduction="sum")
     kld = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
     return bce + kld

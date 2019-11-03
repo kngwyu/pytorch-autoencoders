@@ -9,7 +9,7 @@ def cnn_hidden(params: List[tuple], width: int, height: int) -> Tuple[int, int]:
     for kernel, stride, padding in params:
         width = (width - kernel + 2 * padding) // stride + 1
         height = (height - kernel + 2 * padding) // stride + 1
-    assert width > 0 and height > 0, 'Convolution makes dim < 0!!!'
+    assert width > 0 and height > 0, "Convolution makes dim < 0!!!"
     return width, height
 
 
@@ -17,45 +17,62 @@ class ConvVae(VariationalAutoEncoder):
     """VAE with CNN.
        Default network parameters are cited from https://arxiv.org/abs/1804.03599.
     """
+
     def __init__(
-            self,
-            input_dim: Size,
-            config: Config,
-            conv_channels: List[int] = [32, 32, 32, 32],
-            conv_args: List[tuple] = [(4, 2, 1), (4, 2, 1), (4, 2, 1), (4, 2, 1)],
-            fc_units: List[int] = [256, 256],
-            z_dim: int = 20,
-            activator: nn.Module = nn.ReLU(True)
+        self,
+        input_dim: Size,
+        config: Config,
+        conv_channels: List[int] = [32, 32, 32, 32],
+        conv_args: List[tuple] = [(4, 2, 1), (4, 2, 1), (4, 2, 1), (4, 2, 1)],
+        fc_units: List[int] = [256, 256],
+        z_dim: int = 20,
+        activator: nn.Module = nn.ReLU(True),
     ) -> None:
         super(VariationalAutoEncoder, self).__init__()
         in_channel = input_dim[0] if len(input_dim) == 3 else 1
         channels = [in_channel] + conv_channels
-        self.encoder_conv = nn.Sequential(*chain.from_iterable([
-            (nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]), activator)
-            for i in range(len(channels) - 1)
-        ]))
+        self.encoder_conv = nn.Sequential(
+            *chain.from_iterable(
+                [
+                    (nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]), activator)
+                    for i in range(len(channels) - 1)
+                ]
+            )
+        )
         self.cnn_hidden = cnn_hidden(conv_args, *input_dim[-2:])
         hidden = self.cnn_hidden[0] * self.cnn_hidden[1] * channels[-1]
         encoder_units = [hidden] + fc_units
-        self.encoder_fc = nn.Sequential(*chain.from_iterable([
-            (nn.Linear(encoder_units[i], encoder_units[i + 1]), activator)
-            for i in range(len(encoder_units) - 1)
-        ]))
+        self.encoder_fc = nn.Sequential(
+            *chain.from_iterable(
+                [
+                    (nn.Linear(encoder_units[i], encoder_units[i + 1]), activator)
+                    for i in range(len(encoder_units) - 1)
+                ]
+            )
+        )
         self.mu_fc = nn.Linear(encoder_units[-1], z_dim)
         self.logvar_fc = nn.Linear(encoder_units[-1], z_dim)
         decoder_units = [z_dim] + list(reversed(fc_units[:-1])) + [hidden]
-        self.decoder_fc = nn.Sequential(*chain.from_iterable([
-            (nn.Linear(decoder_units[i], decoder_units[i + 1]), activator)
-            for i in range(len(decoder_units) - 1)
-        ]))
+        self.decoder_fc = nn.Sequential(
+            *chain.from_iterable(
+                [
+                    (nn.Linear(decoder_units[i], decoder_units[i + 1]), activator)
+                    for i in range(len(decoder_units) - 1)
+                ]
+            )
+        )
         channels = list(reversed(conv_channels))
-        deconv = chain.from_iterable([(
-            nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i]),
-            activator
-        ) for i in range(len(channels) - 1)])
+        deconv = chain.from_iterable(
+            [
+                (
+                    nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i]),
+                    activator,
+                )
+                for i in range(len(channels) - 1)
+            ]
+        )
         self.decoder_deconv = nn.Sequential(
-            *deconv,
-            nn.ConvTranspose2d(channels[-1], in_channel, *conv_args[-1])
+            *deconv, nn.ConvTranspose2d(channels[-1], in_channel, *conv_args[-1])
         )
         self.z_dim = z_dim
         self.to(config.device)

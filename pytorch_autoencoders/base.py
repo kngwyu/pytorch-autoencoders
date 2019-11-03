@@ -20,13 +20,13 @@ class AutoEncoderBase(ABC, nn.Module):
     def transformer() -> Callable:
         return ToTensor()
 
-    def save(self, filename: str = 'autoencoder.pth') -> None:
+    def save(self, filename: str = "autoencoder.pth") -> None:
         if isinstance(self, nn.DataParallel):
             to_save = self.module.state_dict()
         else:
             to_save = self.state_dict()
         torch.save(to_save, filename)
 
-    def load(self, device: torch.device, filename: str = 'autoencoder.pth') -> None:
+    def load(self, device: torch.device, filename: str = "autoencoder.pth") -> None:
         loaded_data = torch.load(filename, map_location=device)
         self.load_state_dict(loaded_data)

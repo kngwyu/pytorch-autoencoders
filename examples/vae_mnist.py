@@ -13,13 +13,15 @@ def train() -> None:
     config.optim = partial(Adam, lr=0.001, weight_decay=1e-5)
     config.criterion = beta_vae.get_loss_fn(beta=4.0)
     ae = vae.VariationalAutoEncoder(torch.Size((28, 28)), config)
-    data = MNIST('/tmp/mnist/train', download=True, transform=ToTensor())
+    data = MNIST("/tmp/mnist/train", download=True, transform=ToTensor())
     train_helper.train(ae, config, data)
-    ae.save('vae.pth')
-    data = MNIST('/tmp/mnist/inference', download=True, train=False, transform=ToTensor())
+    ae.save("vae.pth")
+    data = MNIST(
+        "/tmp/mnist/inference", download=True, train=False, transform=ToTensor()
+    )
     inference_helper.show_decoded_images(ae, config, data)
     inference_helper.show_feature_map(ae, config, data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     train()
