@@ -3,6 +3,7 @@ from ..config import Config
 from itertools import chain
 import torch
 from torch import nn, Size, Tensor
+import xarray
 import torchvision.transforms as trans
 from typing import Callable, List
 
@@ -48,8 +49,3 @@ class AutoEncoder(AutoEncoderBase):
 
     def forward(self, x: Tensor) -> Tensor:
         return self.decode(self.encode(x), old_shape=x.shape)
-
-    def transformer() -> Callable:
-        return trans.Compose(
-            [trans.ToTensor(), trans.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-        )
