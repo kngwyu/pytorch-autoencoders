@@ -1,19 +1,39 @@
-import numpy as np
+import pandas as pd
+import torch
 from torch.utils.data import DataLoader, Dataset
+from typing import Any, Callable
 from .base import AutoEncoderBase
 from .config import Config
-import torch
-from typing import List
+from .models import VaeOutPut
 
 
-def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]:
+def simple_logfn(loss: torch.Tensor, *args) -> dict:
+    return dict(loss_mean=loss.detach().cpu().numpy().item())
+
+
+def vae_logfn(loss: torch.Tensor, out: VaeOutPut) -> dict:
+    logvar = out.logvar.detach()
+    return dict(
+        loss_mean=loss.detach().item(),
+        mu_mean=out.logvar.detach().mean().item(),
+        logvar_mean=out.logvar.detach().mean().item(),
+        var_mean=logvar.exp().mean().item()
+    )
+
+
+def train(
+    ae: AutoEncoderBase,
+    config: Config,
+    data_set: Dataset,
+    log_fn: Callable[[torch.Tensor, Any], dict] = simple_logfn,
+) -> pd.DataFrame:
     data_loader = DataLoader(data_set, batch_size=config.batch_size, shuffle=True)
     optimizer = config.optim(ae.parameters())
-    loss_list = []
+    df = pd.DataFrame()
     print("Started training...")
     for epoch in range(config.num_epochs):
-        epoch_loss = []
-        for data in data_loader:
+        epoch_df = pd.DataFrame()
+        for i, data in enumerate(data_loader):
             img, _ = data
             img = img.to(config.device)
             res = ae(img)
@@ -21,13 +41,13 @@ def train(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> List[float]
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            epoch_loss.append(float(loss.item()))
+            epoch_df = epoch_df.append(pd.Series(log_fn(loss, res), name="{}:{}".format(i, epoch)))
+        print("epoch: ", epoch)
+        print(epoch_df.mean())
+        df = df.append(epoch_df)
         if hasattr(config.criterion, "update"):
             config.criterion.update()
-        el = np.array(epoch_loss)
-        print("epoch: {} loss_mean: {}".format(epoch, el.mean()))
-        loss_list.append(float(el.mean()))
-    return loss_list
+    return df
 
 
 def test_loss(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> float:

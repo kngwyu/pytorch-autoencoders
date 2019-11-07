@@ -1,6 +1,4 @@
 from functools import partial
-import json
-from pathlib import Path
 from numpy import ndarray
 from pytorch_autoencoders.config import Config
 from pytorch_autoencoders.data import Dsprites
@@ -22,10 +20,9 @@ def train() -> None:
         gamma=200.0, capacity_max=20.0, num_epochs=config.num_epochs
     )
     ae = conv_vae.betavae_chairs(torch.Size((64, 64)), config)
-    loss = train_helper.train(ae, config, data)
+    result = train_helper.train(ae, config, data, train_helper.vae_logfn)
     ae.save("dsprites_gamma_vae.pth")
-    path = Path("loss.json")
-    path.write_text(json.dumps(loss))
+    result.to_csv("gvae_dsprites_result.csv")
     inference_helper.show_decoded_images(ae, config, data)
 
 

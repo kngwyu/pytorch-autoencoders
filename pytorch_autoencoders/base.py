@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 import torch
 from torch import nn, Tensor
-from torchvision.transforms import ToTensor
-from typing import Any, Callable
+from typing import Any
 
 
 class AutoEncoderBase(ABC, nn.Module):
@@ -16,9 +15,6 @@ class AutoEncoderBase(ABC, nn.Module):
 
     def to_image(self, x: Any) -> Tensor:
         return x
-
-    def transformer() -> Callable:
-        return ToTensor()
 
     def save(self, filename: str = "autoencoder.pth") -> None:
         if isinstance(self, nn.DataParallel):
