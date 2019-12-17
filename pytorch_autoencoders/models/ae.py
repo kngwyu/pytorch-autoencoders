@@ -3,9 +3,7 @@ from ..config import Config
 from itertools import chain
 import torch
 from torch import nn, Size, Tensor
-import xarray
-import torchvision.transforms as trans
-from typing import Callable, List
+from typing import List
 
 
 class AutoEncoder(AutoEncoderBase):
