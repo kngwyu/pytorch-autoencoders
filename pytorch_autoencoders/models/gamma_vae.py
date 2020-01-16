@@ -1,6 +1,5 @@
 """Loss function used in Understanding disentangling in β-VAE(https://arxiv.org/abs/1804.03599)
-This is not called gamma VAE in the original paper.
-But, to avoid confusion, I call it gamma-VAE here.
+To avoid confusion, I call it γ-VAE here.
 """
 import torch
 from torch import Tensor
