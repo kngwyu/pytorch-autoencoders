@@ -7,9 +7,7 @@ if sys.version_info.major != 3:
         "Python {}. The installation will likely fail.".format(sys.version_info.major)
     )
 
-requirements = [
-
-]
+requirements = []
 test_requirements = ["pytest>=3.0"]
 
 setup(

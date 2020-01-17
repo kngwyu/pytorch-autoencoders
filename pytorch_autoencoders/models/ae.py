@@ -1,6 +1,5 @@
 from ..base import AutoEncoderBase
 from ..config import Config
-from itertools import chain
 import torch
 from torch import nn, Size, Tensor
 from typing import List
@@ -13,18 +12,21 @@ class AutoEncoder(AutoEncoderBase):
         super().__init__()
         input_dim_flat = input_dim[-1] * input_dim[-2]
         len_ = len(hidden) - 1
-        enc = [
-            (nn.ReLU(True), nn.Linear(hidden[i], hidden[i + 1])) for i in range(len_)
-        ]
-        self.encoder = nn.Sequential(
-            nn.Linear(input_dim_flat, hidden[0]), *chain.from_iterable(enc)
-        )
-        dec = [
-            (nn.Linear(hidden[i + 1], hidden[i]), nn.ReLU(True))
-            for i in reversed(range(len_))
-        ]
+
+        # Build encoder model
+        encoders = []
+        for i in range(len_):
+            encoders.append(nn.ReLU(True))
+            encoders.append(nn.Linear(hidden[i], hidden[i + 1]))
+        self.encoder = nn.Sequential(nn.Linear(input_dim_flat, hidden[0]), *encoders)
+
+        # Build decoder model
+        decoders = []
+        for i in reversed(range(len_)):
+            decoders.append(nn.Linear(hidden[i + 1], hidden[i]))
+            decoders.append(nn.ReLU(True))
         self.decoder = nn.Sequential(
-            *chain.from_iterable(dec), nn.Linear(hidden[0], input_dim_flat), nn.Tanh()
+            *decoders, nn.Linear(hidden[0], input_dim_flat), nn.Tanh()
         )
         self.input_dim_flat = input_dim_flat
         self._encoded_dim = hidden.pop()

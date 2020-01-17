@@ -28,51 +28,41 @@ class ConvVae(VariationalAutoEncoder):
         z_dim: int = 20,
         activator: nn.Module = nn.ReLU(True),
     ) -> None:
-        super(VariationalAutoEncoder, self).__init__()
+        super().__init__()
         in_channel = input_dim[0] if len(input_dim) == 3 else 1
         channels = [in_channel] + conv_channels
-        self.encoder_conv = nn.Sequential(
-            *chain.from_iterable(
-                [
-                    (nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]), activator)
-                    for i in range(len(channels) - 1)
-                ]
-            )
-        )
+        # Build encoders
+        encoder_cnns = []
+        for i in range(len(channels) - 1):
+            encoder_cnns.append(nn.Conv2d(channels[i], channels[i + 1], *conv_args[i]))
+            encoder_cnns.append(activator)
+        self.encoder_conv = nn.Sequential(*encoder_cnns)
         self.cnn_hidden = cnn_hidden(conv_args, *input_dim[-2:])
         hidden = self.cnn_hidden[0] * self.cnn_hidden[1] * channels[-1]
         encoder_units = [hidden] + fc_units
-        self.encoder_fc = nn.Sequential(
-            *chain.from_iterable(
-                [
-                    (nn.Linear(encoder_units[i], encoder_units[i + 1]), activator)
-                    for i in range(len(encoder_units) - 1)
-                ]
-            )
-        )
-        self.mu_fc = nn.Linear(encoder_units[-1], z_dim)
-        self.logvar_fc = nn.Linear(encoder_units[-1], z_dim)
+        encoder_fcs = []
+        for i in range(len(fc_units)):
+            encoder_fcs.append(nn.Linear(encoder_units[i], encoder_units[i + 1]))
+            encoder_fcs.append(activator)
+        self.encoder_fc = nn.Sequential(*encoder_fcs)
+
+        # Build mu and logvar
+        self.mu_fc = nn.Linear(fc_units[-1], z_dim)
+        self.logvar_fc = nn.Linear(fc_units[-1], z_dim)
+
+        # Build decoders
         decoder_units = [z_dim] + list(reversed(fc_units[:-1])) + [hidden]
-        self.decoder_fc = nn.Sequential(
-            *chain.from_iterable(
-                [
-                    (nn.Linear(decoder_units[i], decoder_units[i + 1]), activator)
-                    for i in range(len(decoder_units) - 1)
-                ]
-            )
-        )
+        decoder_fcs = []
+        for i in range(len(decoder_units) - 1):
+            decoder_fcs.append(nn.Linear(decoder_units[i], decoder_units[i + 1]))
+            decoder_fcs.append(activator)
         channels = list(reversed(conv_channels))
-        deconv = chain.from_iterable(
-            [
-                (
-                    nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i]),
-                    activator,
-                )
-                for i in range(len(channels) - 1)
-            ]
-        )
+        deconvs = []
+        for i in range(len(channels) - 1):
+            deconvs.append(nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i]))
+            deconvs.append(activator)
         self.decoder_deconv = nn.Sequential(
-            *deconv, nn.ConvTranspose2d(channels[-1], in_channel, *conv_args[-1])
+            *deconvs, nn.ConvTranspose2d(channels[-1], in_channel, *conv_args[-1])
         )
         self.z_dim = z_dim
         self.to(config.device)

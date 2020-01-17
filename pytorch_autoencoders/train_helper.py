@@ -17,7 +17,7 @@ def vae_logfn(loss: torch.Tensor, out: VaeOutPut) -> dict:
         loss_mean=loss.detach().item(),
         mu_mean=out.logvar.detach().mean().item(),
         logvar_mean=out.logvar.detach().mean().item(),
-        var_mean=logvar.exp().mean().item()
+        var_mean=logvar.exp().mean().item(),
     )
 
 
@@ -41,7 +41,9 @@ def train(
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            epoch_df = epoch_df.append(pd.Series(log_fn(loss, res), name="{}:{}".format(i, epoch)))
+            epoch_df = epoch_df.append(
+                pd.Series(log_fn(loss, res), name="{}:{}".format(i, epoch))
+            )
         print("epoch: ", epoch)
         print(epoch_df.mean())
         df = df.append(epoch_df)
