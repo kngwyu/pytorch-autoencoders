@@ -28,7 +28,7 @@ class ConvVae(VariationalAutoEncoder):
         z_dim: int = 20,
         activator: nn.Module = nn.ReLU(True),
     ) -> None:
-        super().__init__()
+        super(VariationalAutoEncoder, self).__init__()
         in_channel = input_dim[0] if len(input_dim) == 3 else 1
         channels = [in_channel] + conv_channels
         # Build encoders
@@ -56,6 +56,7 @@ class ConvVae(VariationalAutoEncoder):
         for i in range(len(decoder_units) - 1):
             decoder_fcs.append(nn.Linear(decoder_units[i], decoder_units[i + 1]))
             decoder_fcs.append(activator)
+        self.decoder_fc = nn.Sequential(*decoder_fcs)
         channels = list(reversed(conv_channels))
         deconvs = []
         for i in range(len(channels) - 1):
