@@ -16,5 +16,4 @@ editable = true
 path = "."
 
 [dev-packages]
-pytest = "==3.10.1"
-ipython = "*"
+pytest = "==5.2.4"
