@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
+click = "*"
 numpy = ">=1.15.0"
 pandas = ">=0.25.3"
 opencv-python = ">=3.4"
