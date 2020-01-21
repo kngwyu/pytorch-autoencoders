@@ -60,7 +60,9 @@ class ConvVae(VariationalAutoEncoder):
         channels = list(reversed(conv_channels))
         deconvs = []
         for i in range(len(channels) - 1):
-            deconvs.append(nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i]))
+            deconvs.append(
+                nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i])
+            )
             deconvs.append(activator)
         self.decoder_deconv = nn.Sequential(
             *deconvs, nn.ConvTranspose2d(channels[-1], in_channel, *conv_args[-1])
