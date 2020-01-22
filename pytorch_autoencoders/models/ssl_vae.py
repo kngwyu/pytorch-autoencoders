@@ -12,7 +12,7 @@ class SslVaeOutPut(NamedTuple):
     x: Tensor
     mu: Tensor
     logvar: Tensor
-    probs: Optional[Tensor]
+    probs: Tensor
 
 
 def _generate_labels(batch_size: int, nlabels: int) -> None:
