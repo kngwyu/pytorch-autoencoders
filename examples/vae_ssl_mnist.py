@@ -13,7 +13,7 @@ def train() -> None:
     config.optim = partial(Adam, lr=0.001, weight_decay=1e-5)
     config.batch_size = 200
     data = MNIST("/tmp/mnist/train", download=True, transform=ToTensor())
-    config.criterion = ssl_vae.labeled_bernoulli_loss
+    config.criterion = ssl_vae.LossFunction()
     ae = ssl_vae.VAESslM2(torch.Size((28, 28)), config, nlabels=10)
     result = train_helper.train_ss(ae, config, data, train_helper.vae_logfn)
     result.to_csv("vae_mnist_result.csv")

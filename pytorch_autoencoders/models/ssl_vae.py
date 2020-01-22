@@ -2,7 +2,8 @@ import numpy as np
 import torch
 from torch import nn, Size, Tensor
 from torch.nn import functional as F
-from typing import List, NamedTuple, Optional, Tuple
+from typing import Callable, List, NamedTuple, Optional, Tuple
+from torch.distributions import Categorical
 
 from ..base import SslAutoEncoderBase
 from ..config import Config
@@ -12,7 +13,15 @@ class SslVaeOutPut(NamedTuple):
     x: Tensor
     mu: Tensor
     logvar: Tensor
-    probs: Tensor
+    dist: Categorical
+
+    @property
+    def probs(self) -> Tensor:
+        return self.dist.probs
+
+    @property
+    def logits(self) -> Tensor:
+        return self.dist.logits
 
 
 def _generate_labels(batch_size: int, nlabels: int) -> None:
@@ -52,7 +61,6 @@ class VAESslM2(SslAutoEncoderBase):
             nn.Linear(x_dim, hidden[0]),
             nn.ReLU(inplace=True),
             nn.Linear(hidden[0], nlabels),
-            nn.Softmax(dim=-1),
         )
         self.to(config.device)
         config.initializer(self)
@@ -74,7 +82,7 @@ class VAESslM2(SslAutoEncoderBase):
 
     def classify(self, x: Tensor) -> Tensor:
         x = x.view(x.size(0), -1)
-        return self.classifier(x)
+        return Categorical(logits=self.classifier(x))
 
     def forward(
         self, x: Tensor, label: Optional[Tensor] = None
@@ -89,39 +97,60 @@ class VAESslM2(SslAutoEncoderBase):
         mu, logvar = self.encode(x, label)
         z = self.reparameterize(mu, logvar)
         res = self.decode(z, label).view(old_shape)
-        probs = self.classifier(x)
-        return SslVaeOutPut(res, mu, logvar, probs), x.view(old_shape), label
+        dist = Categorical(logits=self.classifier(x))
+        return SslVaeOutPut(res, mu, logvar, dist), x.view(old_shape), label
 
 
-def _log_standard_categorical(p: Tensor) -> Tensor:
-    """
-    Calculates the cross entropy between a (one-hot) categorical vector
-    and a standard (uniform) categorical distribution.
-    """
-    prior = F.softmax(torch.ones_like(p), dim=1).detach_()
-    cross_entropy = -torch.sum(p * torch.log(prior + 1e-8), dim=1)
-    return cross_entropy
+def _recons_loss_fn(recons_type: str) -> Callable[[Tensor, Tensor], Tensor]:
+    if recons_type == "bernoulli":
 
+        def _loss(x: Tensor, target: Tensor) -> Tensor:
+            return F.binary_cross_entropy(torch.sigmoid(x), target, reduction="sum")
 
-def labeled_bernoulli_loss(
-    res: SslVaeOutPut,
-    img: Tensor,
-    label: Tensor,
-    alpha: float = 0.1,
-    merginalize: bool = False,
-) -> Tensor:
-    # P(x|y,z)
-    recons = F.binary_cross_entropy(torch.sigmoid(res.x), img, reduction="sum")
-    prior = _log_standard_categorical(label).sum()
-    kl = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
-    # -L(x, y)
-    minus_l = recons + prior + kl
-    if merginalize:
-        # -H(q(y|x)) => Maximize entropy
-        minus_h = torch.mean(res.probs * (res.probs + 1e-8).log_(), dim=-1).sum()
-        # -q(y|x)L(x, y)
-        minus_ql = torch.mean(minus_l * res.probs, dim=-1).sum()
-        return minus_h + minus_ql
+    elif recons_type == "gaussian":
+
+        def _loss(x: Tensor, target: Tensor) -> Tensor:
+            return F.mse_loss(torch.sigmoid(x), target, reduction="sum")
+
     else:
-        classfication_loss = torch.mean(label * (res.probs + 1e-8).log_(), dim=-1).sum()
-        return minus_l - alpha * classfication_loss
+        raise ValueError(
+            "Currently only bernoulli and gaussian are supported as decoder head"
+        )
+    return _loss
+
+
+class LossFunction:
+    EPS = 1e-8
+
+    def __init__(self, recons_type: str = "bernoulli") -> None:
+        self.recons_loss = _recons_loss_fn(recons_type)
+
+    def _log_standard_categorical(self, label: Tensor) -> Tensor:
+        prior = F.softmax(torch.ones_like(label), dim=1).detach_()
+        return -torch.sum(label * torch.log(prior + self.EPS), dim=1)
+
+    def __call__(
+        self,
+        res: SslVaeOutPut,
+        target: Tensor,
+        label: Tensor,
+        alpha: float = 1.0,
+        merginalize: bool = False,
+    ) -> Tensor:
+        batch_size = float(target.size(0))
+        recons = self.recons_loss(res.x, target).div_(batch_size)
+        prior = self._log_standard_categorical(res.probs).mean()
+        kl_sum = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
+        kl = kl_sum.div_(batch_size)
+        # -L(x, y) = -(logP(x) + logP(y) - KL(P(z)|Q(z|x,y)))
+        minus_l = recons + prior + kl
+        if merginalize:
+            # -H(q(y|x))
+            minus_h = torch.mean(res.probs * res.logits)
+            # -q(y|x)L(x, y)
+            minus_ql = torch.mean(minus_l * res.probs)
+            return minus_h + minus_ql
+        else:
+            # -logQ(y|x)
+            classfication_loss = torch.mean(label * res.logits)
+            return minus_l - alpha * classfication_loss
