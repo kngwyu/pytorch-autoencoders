@@ -4,7 +4,20 @@ from torch import nn, Tensor
 from typing import Any
 
 
-class AutoEncoderBase(ABC, nn.Module):
+class SaveLoadMixIn:
+    def save(self, filename: str = "autoencoder.pth") -> None:
+        if isinstance(self, nn.DataParallel):
+            to_save = self.module.state_dict()
+        else:
+            to_save = self.state_dict()
+        torch.save(to_save, filename)
+
+    def load(self, device: torch.device, filename: str = "autoencoder.pth") -> None:
+        loaded_data = torch.load(filename, map_location=device)
+        self.load_state_dict(loaded_data)
+
+
+class AutoEncoderBase(ABC, nn.Module, SaveLoadMixIn):
     @abstractmethod
     def encode(self, x: Tensor) -> Any:
         pass
@@ -16,13 +29,20 @@ class AutoEncoderBase(ABC, nn.Module):
     def to_image(self, x: Any) -> Tensor:
         return x
 
-    def save(self, filename: str = "autoencoder.pth") -> None:
-        if isinstance(self, nn.DataParallel):
-            to_save = self.module.state_dict()
-        else:
-            to_save = self.state_dict()
-        torch.save(to_save, filename)
 
-    def load(self, device: torch.device, filename: str = "autoencoder.pth") -> None:
-        loaded_data = torch.load(filename, map_location=device)
-        self.load_state_dict(loaded_data)
+class SslAutoEncoderBase(ABC, nn.Module, SaveLoadMixIn):
+    @abstractmethod
+    def encode(self, x: Tensor, label: Tensor) -> Any:
+        pass
+
+    @abstractmethod
+    def decode(self, z: Tensor, label: Tensor) -> Tensor:
+        pass
+
+    @abstractmethod
+    def sample(self, z: Tensor, label: Tensor) -> Tensor:
+        pass
+
+    @abstractmethod
+    def classify(self, x: Tensor) -> Tensor:
+        pass

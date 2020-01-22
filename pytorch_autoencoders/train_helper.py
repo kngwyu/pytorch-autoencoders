@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 from typing import Any, Callable
-from .base import AutoEncoderBase
+from .base import AutoEncoderBase, SslAutoEncoderBase
 from .config import Config
 from .models import VaeOutPut
 
@@ -68,43 +68,47 @@ def train(
 
 
 def train_ss(
-    ae: AutoEncoderBase,
+    ae: SslAutoEncoderBase,
     config: Config,
     data_set: Dataset,
     log_fn: Callable[[torch.Tensor, Any], dict] = simple_logfn,
-    labels_per_class: int = 100,
+    labels_per_class: int = 3000,
 ) -> pd.DataFrame:
     data_loader = DataLoader(data_set, batch_size=config.batch_size, shuffle=True)
-    all_data = len(data_loader)
-    supervised_indices = np.random.choice(all_data, labels_per_class)
-    supervised_next = 0
-    alpha = config.alpha_coef * (all_data - labels_per_class) / labels_per_class
+    all_data = len(data_set)
+    sup_interval = all_data // labels_per_class
+    supervised_indices = set(np.arange(0, len(data_loader), sup_interval))
+    alpha = config.alpha_coef * all_data
     optimizer = config.optim(ae.parameters())
     df = pd.DataFrame()
     print("Started training...")
+    print(f"alpha: {alpha}")
     onehot = _onehot(10, config.device)
     for epoch in range(config.num_epochs):
         epoch_df = pd.DataFrame()
         for i, data in enumerate(data_loader):
-            if i == supervised_indices[supervised_next]:
-                img, label = data
-                label = onehot(label)
-                has_label = True
+            img, true_label = data
+            batch_size = len(img)
+            if i in supervised_indices:
+                label = onehot(true_label)
+                merginalize = False
             else:
-                img, _ = data
                 label = None
-                has_label = False
+                merginalize = True
             img = img.to(config.device)
             res, img, label = ae(img, label)
-            loss = config.criterion(res, img, label, alpha, not has_label)
+            loss = config.criterion(res, img, label, alpha, merginalize)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            epoch_df = epoch_df.append(
-                pd.Series(log_fn(loss, res), name="{}:{}".format(i, epoch))
+            accurate = torch.sum(
+                res.probs[:batch_size].max(dim=-1)[1] == true_label.to(config.device)
             )
+            log = log_fn(loss, res)
+            log["accuracy"] = accurate.item() / batch_size
+            epoch_df = epoch_df.append(pd.Series(log, name="{}:{}".format(i, epoch)))
         print("epoch: ", epoch)
-        print(epoch_df.mean())
+        print(epoch_df.describe())
         df = df.append(epoch_df)
         if hasattr(config.criterion, "update"):
             config.criterion.update()
@@ -128,7 +132,7 @@ def test_loss(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> float:
     return loss
 
 
-def test_loss_ss(ae: AutoEncoderBase, config: Config, data_set: Dataset) -> float:
+def test_loss_ss(ae: SslAutoEncoderBase, config: Config, data_set: Dataset) -> float:
     data_loader = DataLoader(data_set, batch_size=config.batch_size, shuffle=True)
     cnt = 0
     epoch_loss = 0.0

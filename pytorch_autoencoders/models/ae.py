@@ -37,15 +37,11 @@ class AutoEncoder(AutoEncoderBase):
         shape = x.shape
         return self.encoder(x.view(*shape[:-2], self.input_dim_flat))
 
-    def decode(self, z: Tensor, old_shape: Size = None) -> Tensor:
-        z = self.decoder(z)
-        if old_shape is None:
-            return z
-        else:
-            return z.view(old_shape)
+    def decode(self, z: Tensor) -> Tensor:
+        return self.decoder(z)
 
     def to_image(self, x: Tensor) -> Tensor:
         return torch.clamp(0.5 * (x + 1.0), 0.0, 1.0)
 
     def forward(self, x: Tensor) -> Tensor:
-        return self.decode(self.encode(x), old_shape=x.shape)
+        return self.decode(self.encode(x)).view(x.shape)

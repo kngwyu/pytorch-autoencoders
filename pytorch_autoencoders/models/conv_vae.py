@@ -1,4 +1,3 @@
-from itertools import chain
 from torch import nn, Size, Tensor
 from typing import List, Tuple
 from ..config import Config
@@ -77,7 +76,7 @@ class ConvVae(VariationalAutoEncoder):
         h2 = self.encoder_fc(h1)
         return self.mu_fc(h2), self.logvar_fc(h2)
 
-    def decode(self, z: Tensor, old_shape: Size = None) -> Tensor:
+    def decode(self, z: Tensor) -> Tensor:
         h3 = self.decoder_fc(z)
         h3 = h3.view(h3.size(0), -1, *self.cnn_hidden)
         return self.decoder_deconv(h3)

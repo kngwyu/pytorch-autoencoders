@@ -11,4 +11,4 @@ class Config:
         self.num_epochs = 100
         self.batch_size = 128
         self.initializer = kaiming_normal()
-        self.alpha_coef = 0.1
+        self.alpha_coef = 0.01
