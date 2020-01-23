@@ -50,21 +50,20 @@ class ConvVae(VariationalAutoEncoder):
         self.logvar_fc = nn.Linear(fc_units[-1], z_dim)
 
         # Build decoders
-        decoder_units = [z_dim] + list(reversed(fc_units[:-1])) + [hidden]
+        decoder_units = [z_dim] + list(reversed(fc_units)) + [hidden]
         decoder_fcs = []
         for i in range(len(decoder_units) - 1):
             decoder_fcs.append(nn.Linear(decoder_units[i], decoder_units[i + 1]))
             decoder_fcs.append(activator)
         self.decoder_fc = nn.Sequential(*decoder_fcs)
-        channels = list(reversed(conv_channels))
         deconvs = []
-        for i in range(len(channels) - 1):
+        for i in reversed(range(len(conv_channels) - 1)):
             deconvs.append(
-                nn.ConvTranspose2d(channels[i], channels[i + 1], *conv_args[i])
+                nn.ConvTranspose2d(channels[i + 1], channels[i], *conv_args[i + 1])
             )
             deconvs.append(activator)
         self.decoder_deconv = nn.Sequential(
-            *deconvs, nn.ConvTranspose2d(channels[-1], in_channel, *conv_args[-1])
+            *deconvs, nn.ConvTranspose2d(channels[0], in_channel, *conv_args[0])
         )
         self.z_dim = z_dim
         self.to(config.device)

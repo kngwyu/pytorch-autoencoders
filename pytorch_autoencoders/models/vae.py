@@ -37,7 +37,7 @@ class VariationalAutoEncoder(AutoEncoderBase):
         config.initializer(self)
 
     def encode(self, x: Tensor) -> Tuple[Tensor, Tensor]:
-        h1 = F.relu(self.encoder(x))
+        h1 = F.relu(self.encoder(x.view(x.size(0), -1)))
         return self.mu(h1), self.logvar(h1)
 
     def decode(self, z: Tensor) -> Tensor:
@@ -52,7 +52,7 @@ class VariationalAutoEncoder(AutoEncoderBase):
         return op.x
 
     def forward(self, x: Tensor) -> VaeOutPut:
-        mu, logvar = self.encode(x.view(x.size(0), -1))
+        mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
         return VaeOutPut(self.decode(z).view(x.shape), mu, logvar)
 
