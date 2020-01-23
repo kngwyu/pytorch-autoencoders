@@ -140,8 +140,7 @@ class LossFunction:
         batch_size = float(target.size(0))
         recons = self.recons_loss(res.x, target).div_(batch_size)
         prior = self._log_standard_categorical(res.probs).mean()
-        kl_sum = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
-        kl = kl_sum.div_(batch_size)
+        kl = -0.5 * torch.sum(1.0 + res.logvar - res.mu.pow(2.0) - res.logvar.exp())
         # -L(x, y) = -(logP(x) + logP(y) - KL(P(z)|Q(z|x,y)))
         minus_l = recons + prior + kl
         if merginalize:
